@@ -61,11 +61,17 @@ if (!isset($_SESSION['usuario'])) {
                 echo '      <p><strong>Género:</strong> ' . $row['genero'] . '</p>';
                 echo '      <p><strong>Año:</strong> ' . $row['anio'] . '</p>';
                 echo '      <p>' . $row['descripcion'] . '</p>';
-                // Botón para eliminar la película
-                echo '      <form method="POST" action="eliminar_pelicula.php" style="margin-top: 10px;">';
-                echo '          <input type="hidden" name="id_pelicula" value="' . $row['id'] . '">';
-                echo '          <button type="submit" class="btn btn-danger btn-sm" name="eliminar_pelicula" onclick="return confirm(\'¿Estás seguro de que deseas eliminar esta película?\');">🗑 Eliminar</button>';
-                echo '      </form>';
+                // Botones para editar y eliminar la película
+                echo '      <div class="d-flex justify-content-between">';
+                echo '          <form method="POST" action="editar_pelicula.php" style="margin-top: 10px;">';
+                echo '              <input type="hidden" name="id_pelicula" value="' . $row['id'] . '">';
+                echo '              <button type="submit" class="btn btn-primary btn-sm" name="editar_pelicula">✏️ Editar</button>';
+                echo '          </form>';
+                echo '          <form method="POST" action="eliminar_pelicula.php" style="margin-top: 10px;">';
+                echo '              <input type="hidden" name="id_pelicula" value="' . $row['id'] . '">';
+                echo '              <button type="submit" class="btn btn-danger btn-sm" name="eliminar_pelicula" onclick="return confirm(\'¿Estás seguro de que deseas eliminar esta película?\');">🗑 Eliminar</button>';
+                echo '          </form>';
+                echo '      </div>';
                 echo '  </div>';
                 echo '</div>';
             }
