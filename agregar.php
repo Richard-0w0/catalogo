@@ -2,20 +2,24 @@
 include('conexion.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Verifica que se hayan definido todos los campos requeridos
-    if (isset($_POST['titulo'], $_POST['genero'], $_POST['anio'], $_POST['descripcion'], $_FILES["imagen"])) {
-        $titulo = $_POST['titulo'];
-        $genero = $_POST['genero'];
-        $anio = $_POST['anio'];
-        $descripcion = $_POST['descripcion'];
-        
-        $directorio = "images/"; 
-        $imagen = $directorio . basename($_FILES["imagen"]["name"]);
-    
-        if (move_uploaded_file($_FILES["imagen"]["tmp_name"], $imagen)) {
-            $sql = "INSERT INTO peliculas (titulo, genero, anio, descripcion, imagen) 
-                    VALUES ('$titulo', '$genero', '$anio', '$descripcion', '" . basename($imagen) . "')";
-            if ($conn->query($sql) === TRUE) {
+    if (
+        isset($_POST['titulo'], $_POST['genero'], $_POST['anio'], $_POST['descripcion']) &&
+        isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] === UPLOAD_ERR_OK
+    ) {
+        $titulo = $conn->real_escape_string($_POST['titulo']);
+        $genero = $conn->real_escape_string($_POST['genero']);
+        $anio = intval($_POST['anio']);
+        $descripcion = $conn->real_escape_string($_POST['descripcion']);
+
+        $directorio = "images/";
+        $nombre_imagen = uniqid() . "_" . basename($_FILES["imagen"]["name"]);
+        $ruta_imagen = $directorio . $nombre_imagen;
+
+        if (move_uploaded_file($_FILES["imagen"]["tmp_name"], $ruta_imagen)) {
+            $sql = "INSERT INTO peliculas (titulo, genero, anio, descripcion, imagen) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssiss", $titulo, $genero, $anio, $descripcion, $nombre_imagen);
+            if ($stmt->execute()) {
                 echo "<script>
                         alert('Película agregada con éxito');
                         window.location.href = 'index.php';
@@ -23,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 echo "Error al insertar datos: " . $conn->error;
             }
+            $stmt->close();
         } else {
             echo "Error al subir la imagen.";
         }
@@ -32,7 +37,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->close();
     exit();
 } else {
-    // Si la solicitud es GET, mostramos el formulario para agregar película.
     ?>
     <!DOCTYPE html>
     <html lang="es">
@@ -56,7 +60,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </style>
     </head>
     <body>
-    
     <div class="container">
         <h1 class="mb-4">Agregar Película</h1>
         <form method="POST" action="agregar.php" enctype="multipart/form-data">
@@ -86,7 +89,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </form>
     </div>
-    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     </body>
     </html>

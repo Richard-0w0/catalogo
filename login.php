@@ -53,6 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="password" class="form-control" name="password" placeholder="Contraseña" required>
         </div>
         <button type="submit" class="btn btn-primary">Entrar</button>
+        <a href="registro.php" class="btn btn-success ms-2">Registro</a>
     </form>
     <?php if (isset($error)) echo "<p class='text-danger mt-2'>$error</p>"; ?>
 </div>
