@@ -25,21 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: black;
-            color: white;
-        }
-        .login-container {
-            max-width: 400px;
-            margin: auto;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="estilos.css">
+
 </head>
 <body>
 
@@ -53,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="password" class="form-control" name="password" placeholder="Contraseña" required>
         </div>
         <button type="submit" class="btn btn-primary">Entrar</button>
-        <a href="registro.php" class="btn btn-success ms-2">Registro</a>
+        <button onclick="location.href='registro.php'" class="btn btn-success ms-2">Registro</button>
     </form>
     <?php if (isset($error)) echo "<p class='text-danger mt-2'>$error</p>"; ?>
 </div>

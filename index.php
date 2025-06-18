@@ -31,97 +31,81 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nueva_pelicula'])) {
         $error_subida = "❌ Error al subir la imagen.";
     }
 }
+
+if ($usuario_id) {
+    $sql = "SELECT p.*
+            FROM peliculas p
+            ORDER BY anio DESC";
+} else {
+    $sql = "SELECT p.* FROM peliculas p ORDER BY anio DESC";
+}
+$result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo de Películas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Catálogo Minimalista</title>
     <link rel="stylesheet" href="estilos.css">
+    
+    <script>
+        function toggleForm() {
+            var form = document.getElementById('formulario-rapido');
+            form.classList.toggle('active');
+        }
+    </script>
 </head>
 <body>
-
-<div class="container mt-4">
-    <h1 class="fw-bold text-center mb-4">🎬 Catálogo de Películas</h1>
-    <div class="d-flex justify-content-between mb-4">
-        <div>
-            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#formulario-rapido" aria-expanded="false" aria-controls="formulario-rapido">
-                ➕ Añadir Película
-            </button>
-        </div>
-        <div>
-            <?php if (!$es_admin): ?>
-                <a href="favoritas.php" class="btn btn-info">❤️ Mis Favoritas</a>
-            <?php endif; ?>
-            <a href="logout.php" class="btn btn-warning">🚪 Cerrar Sesión</a>
+<div class="container-minimal">
+    <div class="header-minimal">
+        <h1>🎬 Catálogo Minimalista</h1>
+        <div style="margin-left:auto;">
+            <div class="topbar-btns" style="justify-content: flex-end;">
+                <button class="plus-btn" onclick="toggleForm()" title="Agregar Película">+</button>
+                <a href="administrar.php" class="btn-admin">Administrar</a>
+                <a href="logout.php" class="btn btn-warning">🚪 Cerrar Sesión</a>
+            </div>
         </div>
     </div>
 
-    <div class="collapse mt-5" id="formulario-rapido">
-        <h3>📥 Añadir Nueva Película</h3>
+    <div id="formulario-rapido" class="formulario-rapido">
+        <h3 style="color:#fff;">📥 Añadir Nueva Película</h3>
         <?php if (isset($error_subida)) echo "<p class='text-danger'>$error_subida</p>"; ?>
         <form action="index.php" method="POST" enctype="multipart/form-data" class="row g-3 mt-2">
             <input type="hidden" name="nueva_pelicula" value="1">
-            <div class="col-md-6">
-                <input type="text" name="titulo" class="form-control" placeholder="Título" required>
+            <div style="margin-bottom:12px;">
+                <input type="text" name="titulo" class="form-control" placeholder="Título" required style="width:100%;padding:10px;border-radius:8px;border:none;">
             </div>
-            <div class="col-md-6">
-                <input type="text" name="genero" class="form-control" placeholder="Género" required>
+            <div style="margin-bottom:12px;">
+                <input type="text" name="genero" class="form-control" placeholder="Género" required style="width:100%;padding:10px;border-radius:8px;border:none;">
             </div>
-            <div class="col-md-4">
-                <input type="number" name="anio" class="form-control" placeholder="Año" required>
+            <div style="margin-bottom:12px;">
+                <input type="number" name="anio" class="form-control" placeholder="Año" required style="width:100%;padding:10px;border-radius:8px;border:none;">
             </div>
-            <div class="col-md-8">
-                <input type="file" name="imagen" class="form-control" accept="image/*" required>
+            <div style="margin-bottom:12px;">
+                <input type="file" name="imagen" class="form-control" accept="image/*" required style="width:100%;padding:10px;border-radius:8px;border:none;">
             </div>
-            <div class="col-12">
-                <textarea name="descripcion" class="form-control" placeholder="Descripción" rows="3" required></textarea>
+            <div style="margin-bottom:12px;">
+                <textarea name="descripcion" class="form-control" placeholder="Descripción" rows="3" required style="width:100%;padding:10px;border-radius:8px;border:none;"></textarea>
             </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-success w-100">📤 Guardar Película</button>
+            <div>
+                <button type="submit" class="btn btn-info" style="width:100%;">📤 Guardar Película</button>
             </div>
         </form>
     </div>
 
-    <div class="row">
+    <div class="peliculas-grid">
         <?php
-        if ($usuario_id) {
-            $sql = "SELECT p.*, 
-                    (SELECT COUNT(*) FROM favoritas f WHERE f.pelicula_id = p.id AND f.usuario_id = $usuario_id) as es_favorita
-                    FROM peliculas p ORDER BY anio DESC";
-        } else {
-            $sql = "SELECT p.* FROM peliculas p ORDER BY anio DESC";
-        }
-
-        $result = $conn->query($sql);
-
         if ($result && $result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                $es_favorita = isset($row['es_favorita']) && $row['es_favorita'] > 0;
-                echo '<div class="col-md-4 mb-4">';
-                echo '  <div class="pelicula' . ($es_favorita ? ' favorita' : '') . '">';
-                echo '      <img src="images/' . htmlspecialchars($row['imagen']) . '" alt="' . htmlspecialchars($row['titulo']) . '" class="img-fluid">';
-                echo '      <h5 class="mt-2 fw-bold">' . htmlspecialchars($row['titulo']) . '</h5>';
-                echo '      <p><strong>Género:</strong> ' . htmlspecialchars($row['genero']) . '</p>';
-                echo '      <p><strong>Año:</strong> ' . htmlspecialchars($row['anio']) . '</p>';
-                echo '      <p class="descripcion">' . htmlspecialchars(substr($row['descripcion'], 0, 100)) . '...</p>';
-                echo '      <div class="d-flex justify-content-between mt-3">';
-
-                if (!$es_admin) {
-                    if ($es_favorita) {
-                        echo '<form method="POST" action="quitar_favorita.php" class="w-100">';
-                        echo '<input type="hidden" name="pelicula_id" value="' . $row['id'] . '">';
-                        echo '<button type="submit" class="btn btn-danger btn-sm w-100">❤️ Quitar Favorita</button>';
-                        echo '</form>';
-                    } else {
-                        echo '<form method="POST" action="agregar_favorita.php" class="w-100">';
-                        echo '<input type="hidden" name="pelicula_id" value="' . $row['id'] . '">';
-                        echo '<button type="submit" class="btn btn-outline-danger btn-sm w-100">🤍 Añadir Favorita</button>';
-                        echo '</form>';
-                    }
-                }
+                echo '<div class="pelicula-card">';
+                echo '  <img src="images/' . htmlspecialchars($row['imagen']) . '" alt="' . htmlspecialchars($row['titulo']) . '">';
+                echo '  <h5>' . htmlspecialchars($row['titulo']) . '</h5>';
+                echo '  <p><strong>Género:</strong> ' . htmlspecialchars($row['genero']) . '</p>';
+                echo '  <p><strong>Año:</strong> ' . htmlspecialchars($row['anio']) . '</p>';
+                echo '  <p class="descripcion">' . htmlspecialchars(substr($row['descripcion'], 0, 100)) . '...</p>';
+                echo '  <div class="d-flex justify-content-between mt-3">';
 
                 if ($es_admin) {
                     echo '<form method="POST" action="editar_pelicula.php" class="me-2">';

@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['pelicula_id'])) {
     $stmt->execute();
     $stmt->close();
 
-    header("Location: index.php");
+    header("Location: home.php");
     exit();
 }
 

@@ -2,65 +2,62 @@
 session_start();
 include('conexion.php');
 
-if (!isset($_SESSION['usuario_id']) || $_SESSION['es_admin']) {
-    header("Location: index.php");
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: login.php");
     exit();
 }
+
+$usuario_id = $_SESSION['usuario_id'];
+
+// Obtener las películas favoritas del usuario
+$sql = "SELECT p.*
+        FROM peliculas p
+        INNER JOIN favoritas f ON f.pelicula_id = p.id
+        WHERE f.usuario_id = ?
+        ORDER BY p.anio DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $usuario_id);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Películas Favoritas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="estilos.css">
 </head>
-<body>
-
-<div class="container mt-4">
-    <h1 class="fw-bold text-center mb-4">❤️ Mis Películas Favoritas</h1>
-    <div class="mb-4">
-        <a href="index.php" class="btn btn-secondary">← Volver al catálogo</a>
+<body style="background:#181a1b;">
+<div class="favoritas-container">
+    <div class="topbar-btns">
+        <a href="home.php" class="btn btn-warning">⬅ Volver al Catálogo</a>
     </div>
-    
-    <?php
-    $sql = "SELECT p.* FROM peliculas p
-            JOIN favoritas f ON p.id = f.pelicula_id
-            WHERE f.usuario_id = " . $_SESSION['usuario_id'] . "
-            ORDER BY p.anio DESC";
-    $result = $conn->query($sql);
-    
-    if ($result->num_rows > 0): ?>
-        <div class="row">
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <div class="col-md-4 mb-4">
-                    <div class="pelicula favorita">
-                        <img src="images/<?= $row['imagen'] ?>" alt="<?= $row['titulo'] ?>">
-                        <h5 class="mt-2 fw-bold"><?= $row['titulo'] ?></h5>
-                        <p><strong>Género:</strong> <?= $row['genero'] ?></p>
-                        <p><strong>Año:</strong> <?= $row['anio'] ?></p>
-                        <p class="descripcion"><?= substr($row['descripcion'], 0, 100) ?>...</p>
-                        <form method="POST" action="quitar_favorita.php" class="mt-3">
-                            <input type="hidden" name="pelicula_id" value="<?= $row['id'] ?>">
-                            <button type="submit" class="btn btn-danger btn-sm btn-favorito w-100">❌ Quitar de Favoritas</button>
-                        </form>
-                    </div>
-                </div>
-            <?php endwhile; ?>
-        </div>
-    <?php else: ?>
-        <div class="text-center py-5">
-            <div class="py-5">
-                <h4 class="text-muted">No tienes películas favoritas aún</h4>
-                <p class="text-muted">Agrega algunas películas a tus favoritos desde el catálogo</p>
-                <a href="index.php" class="btn btn-primary mt-3">Explorar Catálogo</a>
-            </div>
-        </div>
-    <?php endif; ?>
+    <h1 class="fw-bold text-center mb-4" style="color:#fff;">❤️ Mis Películas Favoritas</h1>
+    <div class="favoritas-grid">
+        <?php
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo '<div class="pelicula-card">';
+                echo '  <img src="images/' . htmlspecialchars($row['imagen']) . '" alt="' . htmlspecialchars($row['titulo']) . '">';
+                echo '  <h5>' . htmlspecialchars($row['titulo']) . '</h5>';
+                echo '  <p><strong>Género:</strong> ' . htmlspecialchars($row['genero']) . '</p>';
+                echo '  <p><strong>Año:</strong> ' . htmlspecialchars($row['anio']) . '</p>';
+                echo '  <p class="descripcion">' . htmlspecialchars(substr($row['descripcion'], 0, 100)) . '...</p>';
+                echo '  <form method="POST" action="quitar_favorita.php" style="width:100%;">';
+                echo '      <input type="hidden" name="pelicula_id" value="' . htmlspecialchars($row['id']) . '">';
+                echo '      <button type="submit" class="btn-danger" style="width:100%;">❌ Eliminar de Favoritas</button>';
+                echo '  </form>';
+                echo '</div>';
+            }
+        } else {
+            echo '<p style="color:#fff; text-align:center;">No tienes películas favoritas aún.</p>';
+        }
+        ?>
+    </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-<?php $conn->close(); ?>
+<?php
+$stmt->close();
+$conn->close();
+?>
